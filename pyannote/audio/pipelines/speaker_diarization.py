@@ -355,7 +355,12 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             if hook is not None:
                 hook("embeddings", embedding_batch, total=batch_count, completed=i)
 
+        hook("embeddings done. Calling np.vstack()", embedding_batch, total=batch_count, completed=batch_count);
+        print('pyannote-audio: embedding loop done. Calling np.vstack()');
+
         embedding_batches = np.vstack(embedding_batches)
+
+        print('pyannote-audio: Calling rearrange');
 
         embeddings = rearrange(embedding_batches, "(c s) d -> c s d", c=num_chunks)
 
