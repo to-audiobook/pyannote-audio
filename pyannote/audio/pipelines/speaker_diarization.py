@@ -232,6 +232,7 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
         exclude_overlap: bool = False,
         hook: Optional[Callable] = None,
     ):
+        sys.exit(1);
         """Extract embeddings for each (chunk, speaker) pair
 
         Parameters
