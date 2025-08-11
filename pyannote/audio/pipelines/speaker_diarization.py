@@ -355,12 +355,11 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             if hook is not None:
                 hook("embeddings", embedding_batch, total=batch_count, completed=i)
 
-        hook("embeddings done. Calling np.vstack()", embedding_batch, total=batch_count, completed=batch_count);
-        print('pyannote-audio: embedding loop done. Calling np.vstack()');
+        hook("embeddings done. Calling np.vstack()", embedding_batch, total=1, completed=1);
 
         embedding_batches = np.vstack(embedding_batches)
 
-        print('pyannote-audio: Calling rearrange');
+        hook("embeddings done. Calling rearrange()", embedding_batch, total=1, completed=1);
 
         embeddings = rearrange(embedding_batches, "(c s) d -> c s d", c=num_chunks)
 
@@ -514,7 +513,9 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             return diarization
 
         # skip speaker embedding extraction and clustering when only one speaker
-        if not return_embeddings and max_speakers < 2:
+        #if not return_embeddings and max_speakers < 2:
+        if not return_embeddings:
+            hook("not returning embeddings", embeddings);
             hard_clusters = np.zeros((num_chunks, local_num_speakers), dtype=np.int8)
             embeddings = None
             centroids = None
