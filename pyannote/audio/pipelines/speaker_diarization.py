@@ -515,7 +515,7 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
         # skip speaker embedding extraction and clustering when only one speaker
         #if not return_embeddings and max_speakers < 2:
         if not return_embeddings:
-            hook("not returning embeddings", embeddings);
+            hook("not returning embeddings");
             hard_clusters = np.zeros((num_chunks, local_num_speakers), dtype=np.int8)
             embeddings = None
             centroids = None
