@@ -541,6 +541,21 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
 
             hook("self.get_embeddings() done. calling self.clustering()", embeddings, total=1, completed=1);
 
+            # free waveform data so we have a little bit more memory
+            def AvailableMemory():
+                with open('/proc/meminfo', 'r') as file:
+                    data = file.readlines();
+
+                for line in data:
+                    if(line.startswith('MemAvailable:')):
+                        return line.split(':')[1];
+
+            hook(f'available memory before freeing waveform: {AvailableMemory()}', embeddings, total=1, completed=1);
+            import gc;
+            file['waveform'] = None;
+            gc.collect();
+            hook(f'available memory after freeing waveform: {AvailableMemory()}', embeddings, total=1, completed=1);
+
             hard_clusters, _, centroids = self.clustering(
                 embeddings=embeddings,
                 segmentations=binarized_segmentations,
