@@ -356,14 +356,14 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
                 hook("embeddings", embedding_batch, total=batch_count, completed=i)
 
         hook("embeddings done. Calling np.vstack()", embedding_batch, total=1, completed=1);
-        print('embeddings done. Calling np.vstack()', flush=True);
         
         embedding_batches = np.vstack(embedding_batches)
 
-        hook("embeddings done. Calling rearrange()", embedding_batch, total=1, completed=1);
-        print('embeddings done. Calling rearrange', flush=True);
+        hook("np.vstack() done. Calling rearrange()", embedding_batch, total=1, completed=1);
 
         embeddings = rearrange(embedding_batches, "(c s) d -> c s d", c=num_chunks)
+
+        hook("rearrange() done. if self.training", embedding_batch, total=1, completed=1);
 
         # caching embeddings for subsequent trials
         # (see comments at the top of this method for more details)
@@ -377,6 +377,8 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
                     "segmentation.threshold": self.segmentation.threshold,
                     "embeddings": embeddings,
                 }
+
+        hook("if self.training() done. returning embeddings", embedding_batch, total=1, completed=1);
 
         return embeddings
 
@@ -537,6 +539,8 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
                 hook("embeddings", embeddings)
                 #   shape: (num_chunks, local_num_speakers, dimension)
 
+            hook("self.get_embeddings() done. calling self.clustering()", embeddings, total=1, completed=1);
+
             hard_clusters, _, centroids = self.clustering(
                 embeddings=embeddings,
                 segmentations=binarized_segmentations,
@@ -547,7 +551,9 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
                 frames=self._segmentation.model.receptive_field,  # <== for oracle clustering
             )
             # hard_clusters: (num_chunks, num_speakers)
-            # centroids: (num_speakers, dimension)
+            # centroids: (num_speakers, dimension)        
+            hook("self.clustering() done.", embeddings, total=1, completed=1);
+            
 
         # number of detected clusters is the number of different speakers
         num_different_speakers = np.max(hard_clusters) + 1
@@ -581,6 +587,8 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
         inactive_speakers = np.sum(binarized_segmentations.data, axis=1) == 0
         #   shape: (num_chunks, num_speakers)
 
+        hook("calling self.reconstruct()", embeddings, total=1, completed=1);
+
         hard_clusters[inactive_speakers] = -2
         discrete_diarization = self.reconstruct(
             segmentations,
@@ -588,6 +596,7 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             count,
         )
         hook("discrete_diarization", discrete_diarization)
+        hook("self.reconstruct() done. calling self.to_annotation()", discrete_diarization, total=1, completed=1);
 
         # convert to continuous diarization
         diarization = self.to_annotation(
@@ -596,6 +605,7 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             min_duration_off=self.segmentation.min_duration_off,
         )
         diarization.uri = file["uri"]
+        hook("self.to_annotation() done.", discrete_diarization, total=1, completed=1);
 
         # at this point, `diarization` speaker labels are integers
         # from 0 to `num_speakers - 1`, aligned with `centroids` rows.
@@ -604,24 +614,33 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             # when reference is available, use it to map hypothesized speakers
             # to reference speakers (this makes later error analysis easier
             # but does not modify the actual output of the diarization pipeline)
+            hook("calling self.optimal_mapping().", discrete_diarization, total=1, completed=1);
             _, mapping = self.optimal_mapping(
                 file["annotation"], diarization, return_mapping=True
             )
+            hook("self.optimal_mapping() done. calling {key: mapping.get(key, key) for key in diarization.labels()}.", discrete_diarization, total=1, completed=1);
 
             # in case there are more speakers in the hypothesis than in
             # the reference, those extra speakers are missing from `mapping`.
             # we add them back here
             mapping = {key: mapping.get(key, key) for key in diarization.labels()}
 
+            hook("{key: mapping.get(key, key) for key in diarization.labels()} done.", discrete_diarization, total=1, completed=1);
+            
+
         else:
             # when reference is not available, rename hypothesized speakers
             # to human-readable SPEAKER_00, SPEAKER_01, ...
+            hook("rename hypothesized speakers to human-readable SPEAKER_00, SPEAKER_01", diarization, total=1, completed=1);
             mapping = {
                 label: expected_label
                 for label, expected_label in zip(diarization.labels(), self.classes())
             }
+            hook("rename hypothesized speakers to human-readable SPEAKER_00, SPEAKER_01 DONE!", diarization, total=1, completed=1);
 
+        hook("calling diarization.rename_labels()", diarization, total=1, completed=1);
         diarization = diarization.rename_labels(mapping=mapping)
+        hook("diarization.rename_labels() done", diarization, total=1, completed=1);
 
         # at this point, `diarization` speaker labels are strings (or mix of
         # strings and integers when reference is available and some hypothesis
@@ -640,16 +659,23 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
         # of clusters obtained from `clustering`. In this case, we append zero embeddings
         # for extra speakers
         if len(diarization.labels()) > centroids.shape[0]:
+            hook("calling np.pad()", diarization, total=1, completed=1);
             centroids = np.pad(
                 centroids, ((0, len(diarization.labels()) - centroids.shape[0]), (0, 0))
             )
+            hook("np.pad() done", diarization, total=1, completed=1);
 
         # re-order centroids so that they match
         # the order given by diarization.labels()
+        hook("inverse_mapping = {label: index for index, label in mapping.items()}", diarization, total=1, completed=1);
         inverse_mapping = {label: index for index, label in mapping.items()}
+        hook("inverse_mapping = {label: index for index, label in mapping.items()} DONE", diarization, total=1, completed=1);
+
+        hook("[inverse_mapping[label] for label in diarization.labels()]", diarization, total=1, completed=1);
         centroids = centroids[
             [inverse_mapping[label] for label in diarization.labels()]
         ]
+        hook("[inverse_mapping[label] for label in diarization.labels()] DONE", diarization, total=1, completed=1);
 
         return diarization, centroids
 
