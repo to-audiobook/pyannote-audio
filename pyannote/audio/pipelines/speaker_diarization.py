@@ -356,10 +356,12 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
                 hook("embeddings", embedding_batch, total=batch_count, completed=i)
 
         hook("embeddings done. Calling np.vstack()", embedding_batch, total=1, completed=1);
-
+        print('embeddings done. Calling np.vstack()', flush=True);
+        
         embedding_batches = np.vstack(embedding_batches)
 
         hook("embeddings done. Calling rearrange()", embedding_batch, total=1, completed=1);
+        print('embeddings done. Calling rearrange', flush=True);
 
         embeddings = rearrange(embedding_batches, "(c s) d -> c s d", c=num_chunks)
 
