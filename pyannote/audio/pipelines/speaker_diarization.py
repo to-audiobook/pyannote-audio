@@ -48,6 +48,15 @@ from pyannote.audio.pipelines.utils import (
 from pyannote.audio.utils.signal import binarize
 
 
+def AvailableMemory():
+    with open('/proc/meminfo', 'r') as file:
+        data = file.readlines();
+
+    for line in data:
+        if(line.startswith('MemAvailable:')):
+            return line.split(':')[1];
+
+
 def batchify(iterable, batch_size: int = 32, fillvalue=None):
     """Batchify iterable"""
     # batchify('ABCDEFG', 3) --> ['A', 'B', 'C']  ['D', 'E', 'F']  [G, ]
@@ -474,6 +483,8 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             Only returned when `return_embeddings` is True.
         """
 
+        
+
         # setup hook (e.g. for debugging purposes)
         hook = self.setup_hook(file, hook=hook)
 
@@ -482,6 +493,14 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             min_speakers=min_speakers,
             max_speakers=max_speakers,
         )
+
+
+        hook(f'available memory before freeing waveform: {AvailableMemory()}', embeddings, total=1, completed=1);
+        import gc;
+        file['waveform'] = None;
+        gc.collect();
+        hook(f'available memory after freeing waveform: {AvailableMemory()}', embeddings, total=1, completed=1);
+        return None;
 
         segmentations = self.get_segmentations(file, hook=hook)
         hook("segmentation", segmentations)
@@ -542,13 +561,7 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             hook("self.get_embeddings() done. calling self.clustering()", embeddings, total=1, completed=1);
 
             # free waveform data so we have a little bit more memory
-            def AvailableMemory():
-                with open('/proc/meminfo', 'r') as file:
-                    data = file.readlines();
-
-                for line in data:
-                    if(line.startswith('MemAvailable:')):
-                        return line.split(':')[1];
+            
 
             hook(f'available memory before freeing waveform: {AvailableMemory()}', embeddings, total=1, completed=1);
             import gc;
