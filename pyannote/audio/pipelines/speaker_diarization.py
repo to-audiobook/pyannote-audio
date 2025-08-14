@@ -495,11 +495,11 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
         )
 
 
-        hook(f'available memory before freeing waveform: {AvailableMemory()}', embeddings, total=1, completed=1);
+        hook(f'available memory before freeing waveform: {AvailableMemory()}', file, total=1, completed=1);
         import gc;
         file['waveform'] = None;
         gc.collect();
-        hook(f'available memory after freeing waveform: {AvailableMemory()}', embeddings, total=1, completed=1);
+        hook(f'available memory after freeing waveform: {AvailableMemory()}', file, total=1, completed=1);
         return None;
 
         segmentations = self.get_segmentations(file, hook=hook)
