@@ -497,7 +497,7 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
 
         hook(f'available memory before freeing waveform: {AvailableMemory()}', file, total=1, completed=1);
         import gc;
-        file['waveform'] = None;
+        del file['waveform'];
         gc.collect();
         hook(f'available memory after freeing waveform: {AvailableMemory()}', file, total=1, completed=1);
         return None;
