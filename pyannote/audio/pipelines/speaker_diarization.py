@@ -494,12 +494,14 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             max_speakers=max_speakers,
         )
 
-
+        
         hook(f'available memory before freeing waveform: {AvailableMemory()}', file, total=1, completed=1);
+        hook(f'file keys: {file.keys()}', file, total=1, completed=1);        
         import gc;
         del file['waveform'];
         file.clear();
         gc.collect();
+        hook(f'file keys: {file.keys()}', file, total=1, completed=1);
         hook(f'available memory after freeing waveform: {AvailableMemory()}', file, total=1, completed=1);
         return None;
 
