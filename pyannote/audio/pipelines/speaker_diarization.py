@@ -563,7 +563,7 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             # free waveform data so we have a little bit more memory
             
 
-            #FreeWaveformAndHopeWeWillGetSomeRAMBack();
+            FreeWaveformAndHopeWeWillGetSomeRAMBack();
             #gc.collect();
             #FreeWaveformAndHopeWeWillGetSomeRAMBack();
 
