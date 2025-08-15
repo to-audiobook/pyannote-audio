@@ -563,9 +563,9 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             # free waveform data so we have a little bit more memory
             
 
-            FreeWaveformAndHopeWeWillGetSomeRAMBack();
-            gc.collect();
-            FreeWaveformAndHopeWeWillGetSomeRAMBack();
+            #FreeWaveformAndHopeWeWillGetSomeRAMBack();
+            #gc.collect();
+            #FreeWaveformAndHopeWeWillGetSomeRAMBack();
 
             hard_clusters, _, centroids = self.clustering(
                 embeddings=embeddings,
