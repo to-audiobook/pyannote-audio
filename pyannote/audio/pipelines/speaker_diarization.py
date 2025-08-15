@@ -502,11 +502,6 @@ class SpeakerDiarization(SpeakerDiarizationMixin, Pipeline):
             max_speakers=max_speakers,
         )
 
-        FreeWaveformAndHopeWeWillGetSomeRAMBack();
-        gc.collect();
-        FreeWaveformAndHopeWeWillGetSomeRAMBack();
-
-
         segmentations = self.get_segmentations(file, hook=hook)
         hook("segmentation", segmentations)
         #   shape: (num_chunks, num_frames, local_num_speakers)
